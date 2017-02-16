@@ -279,17 +279,17 @@ private:
 //Create const interators .. I hope
 
 template<typename T>
-const_rev_array_2d_iterator<T> two_d_begin(array_2d<T> const &source, char dir = 'h') {
+const_rev_array_2d_iterator<T> rtwo_d_begin(array_2d<T> const &source, char dir = 'h') {
 	return const_rev_array_2d_iterator<T>(source, source.shape()[0], source.shape()[1], dir);
 }
 
 template<typename T>
-const_rev_array_2d_iterator<T> two_d_end(array_2d<T> const &source, char dir = 'h') {
+const_rev_array_2d_iterator<T> rtwo_d_end(array_2d<T> const &source, char dir = 'h') {
 	return const_rev_array_2d_iterator<T>(source, 0, 0, dir);
 }
 
 template<typename T>
-const_rev_array_2d_iterator<T> iter_from_coord(array_2d<T> const &source, std::size_t i, std::size_t j, char dir = 'h') {
+const_rev_array_2d_iterator<T> riter_from_coord(array_2d<T> const &source, std::size_t i, std::size_t j, char dir = 'h') {
 	//coord relative to usual array indexing (assuming index starts at 0,0 .. could generalize later
 	return const_rev_array_2d_iterator<T>(source, i + 1, j + 1, dir);
 }
