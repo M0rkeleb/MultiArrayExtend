@@ -295,17 +295,17 @@ const_rev_array_2d_iterator<T> iter_from_coord(array_2d<T> const &source, std::s
 }
 
 template<typename T>
-const_rev_array_2d_iterator<T> ctwo_d_begin(array_2d<T> const &source, char dir = 'h') {
+const_rev_array_2d_iterator<T> crtwo_d_begin(array_2d<T> const &source, char dir = 'h') {
 	return two_d_begin(source, dir);
 }
 
 template<typename T>
-const_rev_array_2d_iterator<T> ctwo_d_end(array_2d<T> const &source, char dir = 'h') {
+const_rev_array_2d_iterator<T> crtwo_d_end(array_2d<T> const &source, char dir = 'h') {
 	return two_d_end(source, dir);
 }
 
 template<typename T>
-const_rev_array_2d_iterator<T> citer_from_coord(array_2d<T> const &source, std::size_t i, std::size_t j, char dir = 'h') {
+const_rev_array_2d_iterator<T> criter_from_coord(array_2d<T> const &source, std::size_t i, std::size_t j, char dir = 'h') {
 	//coord relative to usual array indexing (assuming index starts at 0,0 .. could generalize later
 	return iter_from_coord(source, i, j, dir);
 }
