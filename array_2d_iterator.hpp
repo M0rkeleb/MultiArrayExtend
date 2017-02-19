@@ -70,13 +70,13 @@ inline std::ptrdiff_t coord_diff(char axis, size_t_pair loc_1, size_t_pair loc_2
 	switch (axis) 
 	{
 	case 'h':
-		return static_cast<ptrdiff_t>loc_1.second - static_cast<ptrdiff_t>loc_2.second;
+		return static_cast<ptrdiff_t>(loc_1.second) - static_cast<ptrdiff_t>(loc_2.second);
 	case 'v':
-		return static_cast<ptrdiff_t>loc_1.first - static_cast<ptrdiff_t>loc_2.first;
+		return static_cast<ptrdiff_t>(loc_1.first) - static_cast<ptrdiff_t>(loc_2.first);
 	case 'd':
-		return std::min(static_cast<ptrdiff_t>loc_1.second - static_cast<ptrdiff_t>loc_2.second, static_cast<ptrdiff_t>loc_1.first - static_cast<ptrdiff_t>loc_2.first);
+		return std::min(static_cast<ptrdiff_t>(loc_1.second) - static_cast<ptrdiff_t>(loc_2.second), static_cast<ptrdiff_t>(loc_1.first) - static_cast<ptrdiff_t>(loc_2.first));
 	case 'a':
-		return std::min(static_cast<ptrdiff_t>(loc_1.second + loc_2.second) - static_cast<ptrdiff_t>width - 1, static_cast<ptrdiff_t>loc_1.first - static_cast<ptrdiff_t>loc_2.first);
+		return std::min(static_cast<ptrdiff_t>(loc_1.second + loc_2.second) - static_cast<ptrdiff_t>(width) - 1, static_cast<ptrdiff_t>(loc_1.first) - static_cast<ptrdiff_t>(loc_2.first));
 	}
 }
 
