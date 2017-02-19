@@ -66,6 +66,20 @@ inline bool equal_loc(char axis, size_t_pair loc_1, size_t_pair loc_2, std::size
 	}
 }
 
+inline std::ptrdiff_t coord_diff(char axis, size_t_pair loc_1, size_t_pair loc_2, std::size_t width) {
+	switch (axis) 
+	{
+	case 'h':
+		return static_cast<ptrdiff_t>loc_1.second - static_cast<ptrdiff_t>loc_2.second;
+	case 'v':
+		return static_cast<ptrdiff_t>loc_1.first - static_cast<ptrdiff_t>loc_2.first;
+	case 'd':
+		return std::min(static_cast<ptrdiff_t>loc_1.second - static_cast<ptrdiff_t>loc_2.second, static_cast<ptrdiff_t>loc_1.first - static_cast<ptrdiff_t>loc_2.first);
+	case 'a':
+		return std::min(static_cast<ptrdiff_t>(loc_1.second + loc_2.second) - static_cast<ptrdiff_t>width - 1, static_cast<ptrdiff_t>loc_1.first - static_cast<ptrdiff_t>loc_2.first);
+	}
+}
+
 template <class T>
 class array_2d_iterator : public boost::iterator_facade<array_2d_iterator<T>,T,boost::random_access_traversal_tag>
 {
@@ -149,10 +163,7 @@ private:
 		if (n >= 0) { for (ptrdiff_t i = 0; i < n; i++) { increment(); } }
 		else { for (ptrdiff_t i = 0; i < -n; i++) { decrement(); } }
 	}
-	ptrdiff_t distance_to(const_array_2d_iterator<T> const& other) const {
-		if (m_axis == 'h') { return static_cast<ptrdiff_t>(other.a_loc.second) - static_cast<ptrdiff_t>(a_loc.second); }
-		return static_cast<ptrdiff_t>(other.a_loc.first) - static_cast<ptrdiff_t>(a_loc.first);
-	}
+	ptrdiff_t distance_to(const_array_2d_iterator<T> const& other) const { return coord_diff(m_axis, a_loc, other.a_loc, this->a_width()); }
 	T const& dereference() const { return (*m_source)[a_loc.first - 1][a_loc.second - 1]; }
 };
 
