@@ -146,7 +146,8 @@ private:
 		return equal_loc(m_axis, a_loc, other.a_loc, this->a_width());
 	}
 	void advance(ptrdiff_t n) {
-		for (ptrdiff_t i = 0; i < n; i++) { increment(); }
+		if (n >= 0) { for (ptrdiff_t i = 0; i < n; i++) { increment(); } }
+		else { for (ptrdiff_t i = 0; i < -n; i++) { decrement(); } }
 	}
 	ptrdiff_t distance_to(const_array_2d_iterator<T> const& other) const {
 		if (m_axis == 'h') { return static_cast<ptrdiff_t>(other.a_loc.second) - static_cast<ptrdiff_t>(a_loc.second); }
