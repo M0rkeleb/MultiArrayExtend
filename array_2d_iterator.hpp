@@ -129,15 +129,14 @@ template <class T>
 class const_array_2d_iterator : public boost::iterator_facade<const_array_2d_iterator<T>, T const, boost::random_access_traversal_tag>
 {
 public:
-	const_array_2d_iterator(array_2d<T> const& source, std::size_t i, std::size_t j) : m_source(source), m_axis('h') { a_loc.first = i; a_loc.second = j; }
-	const_array_2d_iterator(array_2d<T> const& source, std::size_t i, std::size_t j, char d) : m_source(source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
-	template <class U, std::enable_if_t<std::is_convertible<U*, T*>::value, int> = 0>
-	const_array_2d_iterator(const_array_2d_iterator<U> const& other) : m_source(other.m_source), m_axis(other.m_axis), a_loc(other.a_loc) {}
+	const_array_2d_iterator(array_2d<T> const& source, std::size_t i, std::size_t j) : m_source(&source), m_axis('h') { a_loc.first = i; a_loc.second = j; }
+	const_array_2d_iterator(array_2d<T> const& source, std::size_t i, std::size_t j, char d) : m_source(&source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
+	const_array_2d_iterator(const_array_2d_iterator<T> const& other) : m_source(other.m_source), m_axis(other.m_axis), a_loc(other.a_loc) {}
 private:
-	array_2d<T> const& m_source;
+	array_2d<T> const* m_source;
 	char m_axis;
 	std::pair<std::size_t, std::size_t> a_loc;
-	std::size_t a_width() const { return m_source.shape()[1]; } 
+	std::size_t a_width() const { return (m_source->shape())[1]; } 
 	friend class boost::iterator_core_access;
 	template <class> friend class array_2d_iterator;
 	void increment() { move_fwd(m_axis, a_loc); }
@@ -153,7 +152,7 @@ private:
 		if (m_axis == 'h') { return static_cast<ptrdiff_t>(other.a_loc.second) - static_cast<ptrdiff_t>(a_loc.second); }
 		return static_cast<ptrdiff_t>(other.a_loc.first) - static_cast<ptrdiff_t>(a_loc.first);
 	}
-	T const& dereference() const { return m_source[a_loc.first - 1][a_loc.second - 1]; }
+	T const& dereference() const { return (*m_source)[a_loc.first - 1][a_loc.second - 1]; }
 };
 
 
