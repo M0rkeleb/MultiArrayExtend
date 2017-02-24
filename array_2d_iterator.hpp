@@ -74,9 +74,9 @@ inline std::ptrdiff_t coord_diff(char axis, size_t_pair loc_1, size_t_pair loc_2
 	case 'v':
 		return static_cast<ptrdiff_t>(loc_1.first) - static_cast<ptrdiff_t>(loc_2.first);
 	case 'd':
-		return std::min(static_cast<ptrdiff_t>(loc_1.second) - static_cast<ptrdiff_t>(loc_2.second), static_cast<ptrdiff_t>(loc_1.first) - static_cast<ptrdiff_t>(loc_2.first));
+		return static_cast<ptrdiff_t>(std::max(loc_1.second,loc_1.first)) - static_cast<ptrdiff_t>(std::max(loc_2.second, loc_2.first));
 	case 'a':
-		return std::min(static_cast<ptrdiff_t>(loc_1.second + loc_2.second) - static_cast<ptrdiff_t>(width) - 1, static_cast<ptrdiff_t>(loc_1.first) - static_cast<ptrdiff_t>(loc_2.first));
+		return static_cast<ptrdiff_t>(std::max(width + 1 - loc_1.second, loc_1.first)) - static_cast<ptrdiff_t>(std::max(width + 1 - loc_2.second, loc_2.first));
 	}
 }
 
@@ -140,7 +140,7 @@ array_2d_iterator<T> iter_from_coord(array_2d<T> &source, std::size_t i, std::si
 }
 
 template <class T>
-class const_array_2d_iterator : public boost::iterator_facade<const_array_2d_iterator<T>, T const, boost::random_access_traversal_tag>
+class const_array_2d_iterator : public boost::iterator_facade<const_array_2d_iterator<T>, T const, boost::bidirectional_traversal_tag>
 {
 public:
 	const_array_2d_iterator(array_2d<T> const& source, std::size_t i, std::size_t j) : m_source(&source), m_axis('h') { a_loc.first = i; a_loc.second = j; }
@@ -163,7 +163,11 @@ private:
 		if (n >= 0) { for (ptrdiff_t i = 0; i < n; i++) { increment(); } }
 		else { for (ptrdiff_t i = 0; i < -n; i++) { decrement(); } }
 	}
-	ptrdiff_t distance_to(const_array_2d_iterator<T> const& other) const { return coord_diff(m_axis, a_loc, other.a_loc, this->a_width()); }
+	/*ptrdiff_t distance_to(const_array_2d_iterator<T> const& other) const { 
+		std::size_t max_coord = std::max({ a_loc.first, a_loc.second, other.a_loc.first, other.a_loc.second });
+		size_t_pair far_corner{ max_coord,max_coord };
+		return coord_diff(m_axis, far_corner, a_loc, this->a_width()) - coord_diff(m_axis, far_corner, other.a_loc, this->a_width());
+	}*/
 	T const& dereference() const { return (*m_source)[a_loc.first - 1][a_loc.second - 1]; }
 };
 
