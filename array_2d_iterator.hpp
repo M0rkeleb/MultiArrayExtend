@@ -67,13 +67,12 @@ inline bool equal_loc(char axis, size_t_pair loc_1, size_t_pair loc_2, std::size
 }
 
 template <class T>
-class array_2d_iterator : public boost::iterator_facade<array_2d_iterator<T>,T,boost::random_access_traversal_tag>
+class array_2d_iterator : public boost::iterator_facade<array_2d_iterator<T>,T,boost::bidirectional_traversal_tag>
 {
 public:
 	array_2d_iterator(array_2d<T>& source, std::size_t i, std::size_t j) : m_source(source), m_axis('h') { a_loc.first = i; a_loc.second = j; }
 	array_2d_iterator(array_2d<T>& source, std::size_t i, std::size_t j, char d) : m_source(source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
-	template <class U, std::enable_if_t<std::is_convertible<U*, T*>::value,int> = 0>
-	array_2d_iterator(array_2d_iterator<U> const& other) : m_source(other.m_source), m_axis(other.m_axis), a_loc(other.a_loc) {}
+	array_2d_iterator(array_2d_iterator<T> const& other) : m_source(other.m_source), m_axis(other.m_axis), a_loc(other.a_loc) {}
 private:
 	array_2d<T>& m_source;
 	char m_axis;
@@ -95,14 +94,8 @@ private:
 		return equal_loc(m_axis, a_loc, other.a_loc, this->a_width());
 	}
 	void advance(ptrdiff_t n) {
-		for (ptrdiff_t i = 0; i < n; i++) { increment(); }
-	}
-	ptrdiff_t distance_to(array_2d_iterator<T> const& other) const {
-		//Another fuzzy comparison!  This time x.distance_to(z) == n means x.advance(n).equal(z) == true
-		//If x and z have the same direction this is straightforward
-		//But in general also does not behave as expected with math (e.g. x.distance_to(z) might not be negative of z.distance_to(x) if they have different directions
-		if (m_axis == 'h') { return static_cast<ptrdiff_t>(other.a_loc.second) - static_cast<ptrdiff_t>(a_loc.second); }
-		return static_cast<ptrdiff_t>(other.a_loc.first) - static_cast<ptrdiff_t>(a_loc.first);
+		if (n >= 0) { for (ptrdiff_t i = 0; i < n; i++) { increment(); } }
+		else { for (ptrdiff_t i = 0; i < -n; i++) { decrement(); } }
 	}
 	T& dereference() const { return m_source[a_loc.first - 1][a_loc.second - 1]; }
 };
@@ -126,7 +119,7 @@ array_2d_iterator<T> iter_from_coord(array_2d<T> &source, std::size_t i, std::si
 }
 
 template <class T>
-class const_array_2d_iterator : public boost::iterator_facade<const_array_2d_iterator<T>, T const, boost::random_access_traversal_tag>
+class const_array_2d_iterator : public boost::iterator_facade<const_array_2d_iterator<T>, T const, boost::bidirectional_traversal_tag>
 {
 public:
 	const_array_2d_iterator(array_2d<T> const& source, std::size_t i, std::size_t j) : m_source(&source), m_axis('h') { a_loc.first = i; a_loc.second = j; }
@@ -148,10 +141,6 @@ private:
 	void advance(ptrdiff_t n) {
 		if (n >= 0) { for (ptrdiff_t i = 0; i < n; i++) { increment(); } }
 		else { for (ptrdiff_t i = 0; i < -n; i++) { decrement(); } }
-	}
-	ptrdiff_t distance_to(const_array_2d_iterator<T> const& other) const {
-		if (m_axis == 'h') { return static_cast<ptrdiff_t>(other.a_loc.second) - static_cast<ptrdiff_t>(a_loc.second); }
-		return static_cast<ptrdiff_t>(other.a_loc.first) - static_cast<ptrdiff_t>(a_loc.first);
 	}
 	T const& dereference() const { return (*m_source)[a_loc.first - 1][a_loc.second - 1]; }
 };
@@ -194,18 +183,17 @@ const_array_2d_iterator<T> citer_from_coord(array_2d<T> const &source, std::size
 }
 
 template <class T>
-class rev_array_2d_iterator : public boost::iterator_facade<rev_array_2d_iterator<T>, T, boost::random_access_traversal_tag>
+class rev_array_2d_iterator : public boost::iterator_facade<rev_array_2d_iterator<T>, T, boost::bidirectional_traversal_tag>
 {
 public:
-	rev_array_2d_iterator(array_2d<T>& source, std::size_t i, std::size_t j) : m_source(source), m_axis('h') { a_loc.first = i; a_loc.second = j; }
-	rev_array_2d_iterator(array_2d<T>& source, std::size_t i, std::size_t j, char d) : m_source(source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
-	template <class U, std::enable_if_t<std::is_convertible<U*, T*>::value, int> = 0>
-	rev_array_2d_iterator(rev_array_2d_iterator<U> const& other) : m_source(other.m_source), m_axis(other.m_axis), a_loc(other.a_loc) {}
+	rev_array_2d_iterator(array_2d<T>& source, std::size_t i, std::size_t j) : m_source(&source), m_axis('h') { a_loc.first = i; a_loc.second = j; }
+	rev_array_2d_iterator(array_2d<T>& source, std::size_t i, std::size_t j, char d) : m_source(&source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
+	rev_array_2d_iterator(rev_array_2d_iterator<T> const& other) : m_source(other.m_source), m_axis(other.m_axis), a_loc(other.a_loc) {}
 private:
-	array_2d<T>& m_source;
+	array_2d<T>* m_source;
 	char m_axis;
 	std::pair<std::size_t, std::size_t> a_loc;
-	std::size_t a_width() const { return m_source.shape()[1]; } 
+	std::size_t a_width() const { return m_source->shape()[1]; } 
 	friend class boost::iterator_core_access;
 	template <class> friend class rev_array_2d_iterator;
 	void increment() { move_back(m_axis, a_loc); }
@@ -215,13 +203,10 @@ private:
 		return equal_loc(m_axis, a_loc, other.a_loc, this->a_width());
 	}
 	void advance(ptrdiff_t n) {
-		for (ptrdiff_t i = 0; i < n; i++) { increment(); }
+		if (n >= 0) { for (ptrdiff_t i = 0; i < n; i++) { increment(); } }
+		else { for (ptrdiff_t i = 0; i < -n; i++) { decrement(); } }
 	}
-	ptrdiff_t distance_to(rev_array_2d_iterator<T> const& other) const {
-		if (m_axis == 'h') { return static_cast<ptrdiff_t>(a_loc.second) - static_cast<ptrdiff_t>(other.a_loc.second); }
-		return static_cast<ptrdiff_t>(a_loc.first) - static_cast<ptrdiff_t>(other.a_loc.first);
-	}
-	T& dereference() const { return m_source[a_loc.first - 1][a_loc.second - 1]; }
+	T& dereference() const { return (*m_source)[a_loc.first - 1][a_loc.second - 1]; }
 };
 
 //Convenience functions for begin, end, and arbitrary index iterator creators from a given 2d_array
@@ -243,13 +228,12 @@ rev_array_2d_iterator<T> riter_from_coord(array_2d<T> &source, std::size_t i, st
 }
 
 template <class T>
-class const_rev_array_2d_iterator : public boost::iterator_facade<const_rev_array_2d_iterator<T>, T const, boost::random_access_traversal_tag>
+class const_rev_array_2d_iterator : public boost::iterator_facade<const_rev_array_2d_iterator<T>, T const, boost::bidirectional_traversal_tag>
 {
 public:
 	const_rev_array_2d_iterator(array_2d<T> const& source, std::size_t i, std::size_t j) : m_source(source), m_axis('h') { a_loc.first = i; a_loc.second = j; }
 	const_rev_array_2d_iterator(array_2d<T> const& source, std::size_t i, std::size_t j, char d) : m_source(source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
-	template <class U, std::enable_if_t<std::is_convertible<U*, T*>::value, int> = 0>
-	const_rev_array_2d_iterator(const_array_2d_iterator<U> const& other) : m_source(other.m_source), m_axis(other.m_axis), a_loc(other.a_loc) {}
+	const_rev_array_2d_iterator(const_array_2d_iterator<T> const& other) : m_source(other.m_source), m_axis(other.m_axis), a_loc(other.a_loc) {}
 private:
 	array_2d<T> const& m_source;
 	char m_axis;
@@ -264,11 +248,8 @@ private:
 		return equal_loc(m_axis, a_loc, other.a_loc, this->a_width());
 	}
 	void advance(ptrdiff_t n) {
-		for (ptrdiff_t i = 0; i < n; i++) { increment(); }
-	}
-	ptrdiff_t distance_to(const_rev_array_2d_iterator<T> const& other) const {
-		if (m_axis == 'h') { return static_cast<ptrdiff_t>(a_loc.second) - static_cast<ptrdiff_t>(other.a_loc.second); }
-		return static_cast<ptrdiff_t>(a_loc.first) - static_cast<ptrdiff_t>(other.a_loc.first);
+		if (n >= 0) { for (ptrdiff_t i = 0; i < n; i++) { increment(); } }
+		else { for (ptrdiff_t i = 0; i < -n; i++) { decrement(); } }
 	}
 	T const& dereference() const { return m_source[a_loc.first - 1][a_loc.second - 1]; }
 };
