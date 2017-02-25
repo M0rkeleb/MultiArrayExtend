@@ -66,20 +66,6 @@ inline bool equal_loc(char axis, size_t_pair loc_1, size_t_pair loc_2, std::size
 	}
 }
 
-inline std::ptrdiff_t coord_diff(char axis, size_t_pair loc_1, size_t_pair loc_2, std::size_t width) {
-	switch (axis) 
-	{
-	case 'h':
-		return static_cast<ptrdiff_t>(loc_1.second) - static_cast<ptrdiff_t>(loc_2.second);
-	case 'v':
-		return static_cast<ptrdiff_t>(loc_1.first) - static_cast<ptrdiff_t>(loc_2.first);
-	case 'd':
-		return static_cast<ptrdiff_t>(std::max(loc_1.second,loc_1.first)) - static_cast<ptrdiff_t>(std::max(loc_2.second, loc_2.first));
-	case 'a':
-		return static_cast<ptrdiff_t>(std::max(width + 1 - loc_1.second, loc_1.first)) - static_cast<ptrdiff_t>(std::max(width + 1 - loc_2.second, loc_2.first));
-	}
-}
-
 template <class T>
 class array_2d_iterator : public boost::iterator_facade<array_2d_iterator<T>,T,boost::bidirectional_traversal_tag>
 {
@@ -200,14 +186,14 @@ template <class T>
 class rev_array_2d_iterator : public boost::iterator_facade<rev_array_2d_iterator<T>, T, boost::bidirectional_traversal_tag>
 {
 public:
-	rev_array_2d_iterator(array_2d<T>& source, std::size_t i, std::size_t j) : m_source(source), m_axis('h') { a_loc.first = i; a_loc.second = j; }
-	rev_array_2d_iterator(array_2d<T>& source, std::size_t i, std::size_t j, char d) : m_source(source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
+	rev_array_2d_iterator(array_2d<T>& source, std::size_t i, std::size_t j) : m_source(&source), m_axis('h') { a_loc.first = i; a_loc.second = j; }
+	rev_array_2d_iterator(array_2d<T>& source, std::size_t i, std::size_t j, char d) : m_source(&source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
 	rev_array_2d_iterator(rev_array_2d_iterator<T> const& other) : m_source(other.m_source), m_axis(other.m_axis), a_loc(other.a_loc) {}
 private:
-	array_2d<T>& m_source;
+	array_2d<T>* m_source;
 	char m_axis;
 	std::pair<std::size_t, std::size_t> a_loc;
-	std::size_t a_width() const { return m_source.shape()[1]; } 
+	std::size_t a_width() const { return m_source->shape()[1]; } 
 	friend class boost::iterator_core_access;
 	template <class> friend class rev_array_2d_iterator;
 	void increment() { move_back(m_axis, a_loc); }
@@ -220,7 +206,7 @@ private:
 		if (n >= 0) { for (ptrdiff_t i = 0; i < n; i++) { increment(); } }
 		else { for (ptrdiff_t i = 0; i < -n; i++) { decrement(); } }
 	}
-	T& dereference() const { return m_source[a_loc.first - 1][a_loc.second - 1]; }
+	T& dereference() const { return (*m_source)[a_loc.first - 1][a_loc.second - 1]; }
 };
 
 //Convenience functions for begin, end, and arbitrary index iterator creators from a given 2d_array
