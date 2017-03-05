@@ -10,6 +10,9 @@
 template<typename T>
 using array_2d = boost::multi_array<T, 2>;
 
+template<typename T, bool to_const>
+using const_if_t = std::conditional_t<to_const, std::add_const_t<T>, T>;
+
 using size_t_pair = std::pair<std::size_t, std::size_t>;
 
 inline void move_fwd(char axis, size_t_pair& locat) {
@@ -66,6 +69,44 @@ inline bool equal_loc(char axis, size_t_pair loc_1, size_t_pair loc_2, std::size
 	}
 }
 
+template <class DtType, bool const_fl, bool rev_fl>
+class gen_array_2d_iterator : public boost::iterator_facade<gen_array_2d_iterator<DtType, const_fl, rev_fl>, const_if_t<DtType, const_fl>, boost::bidirectional_traversal_tag>
+{
+public:
+	gen_array_2d_iterator(array_2d<DtType>& source, std::size_t i, std::size_t j, char d) : m_source(&source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
+	template<typename = std::enable_if_t<const_fl> >
+	gen_array_2d_iterator(array_2d<DtType> const& source, std::size_t i, std::size_t j, char d) : m_source(&source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
+private:
+	std::add_pointer_t<const_if_t<array_2d<DtType>, const_fl> > m_source;
+	char m_axis;
+	// Direction of this iterator - four possibilities.
+	// h = horizontal
+	// v = vertical
+	// d = descending (diagonally)
+	// a = ascending (diagonally)
+	size_t_pair a_loc;
+	//location in the array - but starting at 1,1 to be able to be consistent with reverse iterator so rend can have index 0,0
+	//best way to move and compare, pointer arithmetic is not helpful
+	std::size_t a_width() const { return m_source->shape()[1]; } //width of the 2d array, helpful to traverse with non-horizontal iterators
+	friend class boost::iterator_core_access;
+	void increment() {
+		if (rev_fl) { move_back(m_axis, a_loc); }
+		else { move_fwd(m_axis, a_loc); }
+	}
+	void decrement() {
+		if (rev_fl) { move_fwd(m_axis, a_loc); }
+		else { move_back(m_axis, a_loc); }
+	}
+	bool equal(gen_array_2d_iterator<DtType, const_fl, rev_fl> const& other) const {
+		if (m_source != other.m_source) { return false; }
+		return equal_loc(m_axis, a_loc, other.a_loc, this->a_width());
+	}
+	std::add_lvalue_reference_t<const_if_t<DtType, const_fl> > dereference() const { return (*m_source)[a_loc.first - 1][a_loc.second - 1]; }
+};
+
+template <class DtType>
+using reg_array_2d_iterator = gen_array_2d_iterator<DtType, false, false>;
+
 template <class T>
 class array_2d_iterator : public boost::iterator_facade<array_2d_iterator<T>,T,boost::bidirectional_traversal_tag>
 {
@@ -103,19 +144,19 @@ private:
 //Convenience functions for begin, end, and arbitrary index iterator creators from a given 2d_array
 
 template<typename T>
-array_2d_iterator<T> two_d_begin(array_2d<T> &source, char dir = 'h') {
-	return array_2d_iterator<T>(source, 1, 1, dir);
+reg_array_2d_iterator<T> two_d_begin(array_2d<T> &source, char dir = 'h') {
+	return reg_array_2d_iterator<T>(source, 1, 1, dir);
 }
 
 template<typename T>
-array_2d_iterator<T> two_d_end(array_2d<T> &source, char dir = 'h') {
-	return array_2d_iterator<T>(source, source.shape()[0] + 1, source.shape()[1] + 1, dir);
+reg_array_2d_iterator<T> two_d_end(array_2d<T> &source, char dir = 'h') {
+	return reg_array_2d_iterator<T>(source, source.shape()[0] + 1, source.shape()[1] + 1, dir);
 }
 
 template<typename T>
-array_2d_iterator<T> iter_from_coord(array_2d<T> &source, std::size_t i, std::size_t j, char dir = 'h') {
+reg_array_2d_iterator<T> iter_from_coord(array_2d<T> &source, std::size_t i, std::size_t j, char dir = 'h') {
 	//coord relative to usual array indexing (assuming index starts at 0,0 .. could generalize later
-	return array_2d_iterator<T>(source, i + 1, j + 1, dir);
+	return reg_array_2d_iterator<T>(source, i + 1, j + 1, dir);
 }
 
 template <class T>
