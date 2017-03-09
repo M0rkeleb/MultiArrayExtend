@@ -76,6 +76,8 @@ public:
 	gen_array_2d_iterator(array_2d<DtType>& source, std::size_t i, std::size_t j, char d) : m_source(&source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
 	template<typename = std::enable_if_t<const_fl> >
 	gen_array_2d_iterator(array_2d<DtType> const& source, std::size_t i, std::size_t j, char d) : m_source(&source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
+	template<typename = std::enable_if_t<const_fl || !const_fl_o>, bool const_fl_o, bool rev_fl_o, class DtTypeO = DtType>
+	gen_array_2d_iterator(gen_array_2d_iterator<DtTypeO, const_fl_o, rev_fl_o> const& other) : m_source(other.m_source), m_axis(other.m_axis), a_loc(other.a_loc) {}
 private:
 	std::add_pointer_t<const_if_t<array_2d<DtType>, const_fl> > m_source;
 	char m_axis;
@@ -89,6 +91,7 @@ private:
 	//best way to move and compare, pointer arithmetic is not helpful
 	std::size_t a_width() const { return m_source->shape()[1]; } //width of the 2d array, helpful to traverse with non-horizontal iterators
 	friend class boost::iterator_core_access;
+	template <class DtType, bool const_fl_o, bool rev_fl_o> friend class gen_array_2d_iterator;
 	void increment() {
 		if (rev_fl) { move_back(m_axis, a_loc); }
 		else { move_fwd(m_axis, a_loc); }
@@ -97,7 +100,8 @@ private:
 		if (rev_fl) { move_fwd(m_axis, a_loc); }
 		else { move_back(m_axis, a_loc); }
 	}
-	bool equal(gen_array_2d_iterator<DtType, const_fl, rev_fl> const& other) const {
+	template<bool const_fl_o>
+	bool equal(gen_array_2d_iterator<DtType, const_fl_o, rev_fl> const& other) const {
 		if (m_source != other.m_source) { return false; }
 		return equal_loc(m_axis, a_loc, other.a_loc, this->a_width());
 	}
