@@ -78,6 +78,7 @@ public:
 	gen_array_2d_iterator(array_2d<DtType> const& source, std::size_t i, std::size_t j, char d) : m_source(&source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
 	template<typename = std::enable_if_t<const_fl || !const_fl_o>, bool const_fl_o, bool rev_fl_o, class DtTypeO = DtType>
 	gen_array_2d_iterator(gen_array_2d_iterator<DtTypeO, const_fl_o, rev_fl_o> const& other) : m_source(other.m_source), m_axis(other.m_axis), a_loc(other.a_loc) {}
+	size_t_pair get_loc() { return a_loc; }
 private:
 	std::add_pointer_t<const_if_t<array_2d<DtType>, const_fl> > m_source;
 	char m_axis;
