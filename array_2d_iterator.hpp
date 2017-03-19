@@ -73,6 +73,7 @@ template <class DtType, bool const_fl, bool rev_fl>
 class gen_array_2d_iterator : public boost::iterator_facade<gen_array_2d_iterator<DtType, const_fl, rev_fl>, const_if_t<DtType, const_fl>, boost::bidirectional_traversal_tag>
 {
 public:
+	gen_array_2d_iterator() : m_source(nullptr), m_axis('h') { a_loc.first = 0; a_loc.second = 0; }
 	gen_array_2d_iterator(array_2d<DtType>& source, std::size_t i, std::size_t j, char d) : m_source(&source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
 	template<typename = std::enable_if_t<const_fl> >
 	gen_array_2d_iterator(array_2d<DtType> const& source, std::size_t i, std::size_t j, char d) : m_source(&source), m_axis(d) { a_loc.first = i; a_loc.second = j; }
